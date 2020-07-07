@@ -3,7 +3,6 @@
 from django.core.exceptions import ValidationError as InternalValidationError
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models import Q, Prefetch, Manager
-from django.utils import six
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import BooleanField, NullBooleanField
@@ -32,7 +31,7 @@ def has_joins(queryset):
     If this is the case, it is possible for the queryset
     to return duplicate results.
     """
-    for join in six.itervalues(queryset.query.alias_map):
+    for join in queryset.query.alias_map.values():
         if join.join_type:
             return True
     return False
@@ -228,7 +227,7 @@ class DynamicFilterBackend(BaseFilterBackend):
 
         out = TreeMap()
 
-        for spec, value in six.iteritems(filters_map):
+        for spec, value in filters_map.items():
 
             # Inclusion or exclusion?
             if spec[0] == '-':
@@ -262,7 +261,7 @@ class DynamicFilterBackend(BaseFilterBackend):
                 value = value[0]
                 if (
                     operator == 'isnull' and
-                    isinstance(value, six.string_types)
+                    isinstance(value, str)
                 ):
                     value = is_truthy(value)
                 elif operator == 'eq':
@@ -300,7 +299,7 @@ class DynamicFilterBackend(BaseFilterBackend):
 
         def rewrite_filters(filters, serializer):
             out = {}
-            for k, node in six.iteritems(filters):
+            for k, node in filters.items():
                 filter_key, field = node.generate_query_key(serializer)
                 if isinstance(field, (BooleanField, NullBooleanField)):
                     node.value = is_truthy(node.value)
@@ -318,7 +317,7 @@ class DynamicFilterBackend(BaseFilterBackend):
             q &= Q(**includes)
         if excludes:
             excludes = rewrite_filters(excludes, serializer)
-            for k, v in six.iteritems(excludes):
+            for k, v in excludes.items():
                 q &= ~Q(**{k: v})
         return q
 
@@ -333,8 +332,8 @@ class DynamicFilterBackend(BaseFilterBackend):
     ):
         """Build a prefetch dictionary based on internal requirements."""
 
-        for source, remainder in six.iteritems(requirements):
-            if not remainder or isinstance(remainder, six.string_types):
+        for source, remainder in requirements.items():
+            if not remainder or isinstance(remainder, str):
                 # no further requirements to prefetch
                 continue
 
@@ -382,7 +381,7 @@ class DynamicFilterBackend(BaseFilterBackend):
     ):
         """Build a prefetch dictionary based on request requirements."""
 
-        for name, field in six.iteritems(fields):
+        for name, field in fields.items():
             original_field = field
             if isinstance(field, DynamicRelationField):
                 field = field.serializer
@@ -443,7 +442,7 @@ class DynamicFilterBackend(BaseFilterBackend):
         requirements
     ):
         """Extract internal prefetch requirements from serializer fields."""
-        for name, field in six.iteritems(fields):
+        for name, field in fields.items():
             source = field.source
             # Requires may be manually set on the field -- if not,
             # assume the field requires only its source.

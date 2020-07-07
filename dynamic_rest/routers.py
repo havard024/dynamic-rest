@@ -8,8 +8,6 @@ try:
 except ImportError:
     from django.core.urlresolvers import get_script_prefix
 
-from django.utils import six
-
 import rest_framework
 from rest_framework import views
 from rest_framework.response import Response
@@ -60,12 +58,12 @@ def get_directory(request):
     # structure, for now it is capped at a single level
     # for UX reasons
     for group_name, endpoints in sorted(
-        six.iteritems(directory),
+        directory.items(),
         key=sort_key
     ):
         endpoints_list = []
         for endpoint_name, endpoint in sorted(
-            six.iteritems(endpoints),
+            endpoints.items(),
             key=sort_key
         ):
             if endpoint_name[:1] == '_':
@@ -339,7 +337,7 @@ class DynamicRouter(DefaultRouter):
         else:
             route_compat_kwargs = {}
 
-        for field_name, field in six.iteritems(fields):
+        for field_name, field in fields.items():
             methodname = 'list_related'
             url = (
                 r'^{prefix}/{lookup}/(?P<field_name>%s)'

@@ -1,7 +1,6 @@
 """This module contains custom viewset classes."""
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import QueryDict
-from django.utils import six
 from django.db import transaction, IntegrityError
 from rest_framework import exceptions, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -33,7 +32,7 @@ class QueryParams(QueryDict):
         else:
             assert isinstance(
                 query_params,
-                (six.string_types, six.binary_type)
+                (str, bytes)
             )
             query_string = query_params
         kwargs['mutable'] = True
@@ -451,7 +450,7 @@ class DynamicModelViewSet(WithDynamicViewSetMixin, viewsets.ModelViewSet):
         serializer = self.get_serializer()
         fields = serializer.get_all_fields()
         validated = {}
-        for name, value in six.iteritems(data):
+        for name, value in data.items():
             field = fields.get(name, None)
             if field is None:
                 raise ValidationError(
@@ -485,7 +484,7 @@ class DynamicModelViewSet(WithDynamicViewSetMixin, viewsets.ModelViewSet):
         try:
             with transaction.atomic():
                 for record in queryset:
-                    for k, v in six.iteritems(data):
+                    for k, v in data.items():
                         setattr(record, k, v)
                     record.save()
                     updated += 1
